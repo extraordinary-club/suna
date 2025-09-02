@@ -132,6 +132,12 @@ async def log_requests_middleware(request: Request, call_next):
 allowed_origins = ["https://www.suna.so", "https://suna.so"]
 allow_origin_regex = None
 
+# Add Railway deployment URLs
+allowed_origins.extend([
+    "https://suno-frontend-production.up.railway.app",
+    "https://suna-backend-api-production.up.railway.app"
+])
+
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.LOCAL:
     allowed_origins.append("http://localhost:3000")
