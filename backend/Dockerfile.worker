@@ -1,0 +1,26 @@
+FROM ghcr.io/astral-sh/uv:python3.11-alpine
+
+ENV ENV_MODE production
+WORKDIR /app
+
+# Install system dependencies for worker
+RUN apk add --no-cache curl git
+
+# Install Python dependencies
+COPY pyproject.toml uv.lock ./
+ENV UV_LINK_MODE=copy
+RUN uv sync --locked --quiet
+
+# Copy application code
+COPY . .
+
+# Worker-specific environment variables
+ENV PYTHONPATH=/app
+ENV DRAMATIQ_PROCESSES=4
+ENV DRAMATIQ_THREADS=4
+
+# Health check script for worker
+RUN echo '#!/bin/sh\nuv run python worker_health.py' > /healthcheck.sh && chmod +x /healthcheck.sh
+
+# Run Dramatiq worker
+CMD ["sh", "-c", "uv run dramatiq --skip-logging --processes ${DRAMATIQ_PROCESSES:-4} --threads ${DRAMATIQ_THREADS:-4} run_agent_background"]
