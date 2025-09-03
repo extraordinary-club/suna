@@ -32,15 +32,12 @@ router = APIRouter(prefix="/composio", tags=["composio"])
 
 db: Optional[DBConnection] = None
 
-# Cache is now handled by ComposioTriggerService
-
 def initialize(database: DBConnection):
     global db
     db = database
     
 COMPOSIO_API_BASE = os.getenv("COMPOSIO_API_BASE", "https://backend.composio.dev")
 
-# Standard webhook verification used for Composio (hex secret, base64 signature)
 def verify_std_webhook(wid: str, wts: str, wsig: str, raw: bytes, hex_secret: str, max_skew: int = 300) -> bool:
     if not (wid and wts and wsig and hex_secret):
         return False
@@ -50,7 +47,6 @@ def verify_std_webhook(wid: str, wts: str, wsig: str, raw: bytes, hex_secret: st
         if abs(now - ts_int) > max_skew:
             return False
     except Exception:
-        # Allow non-epoch timestamps
         pass
     try:
         key = bytes.fromhex(hex_secret)
@@ -63,13 +59,12 @@ def verify_std_webhook(wid: str, wts: str, wsig: str, raw: bytes, hex_secret: st
     candidates = []
     for entry in wsig.split():
         entry = entry.strip()
-        if "," in entry:  # e.g., "v1,<b64>"
+        if "," in entry:
             candidates.append(entry.split(",", 1)[1].strip())
-        elif "=" in entry:  # e.g., "sha256=<hex>"
+        elif "=" in entry:
             candidates.append(entry.split("=", 1)[1].strip())
         else:
             candidates.append(entry)
-    # Compare against expected base64; also tolerate hex
     if any(hmac.compare_digest(expected_b64, c) for c in candidates):
         return True
     try:
@@ -81,7 +76,6 @@ def verify_std_webhook(wid: str, wts: str, wsig: str, raw: bytes, hex_secret: st
     return False
 
 
-# Drop-in verifier per standard-webhooks style; tries ASCII, HEX, B64 keys and id.ts.body/ts.body
 def _parse_sigs(wsig: str):
     out = []
     for part in wsig.split():
@@ -110,7 +104,6 @@ async def verify_composio(request: Request, secret_env: str = "COMPOSIO_WEBHOOK_
     if not (wid and wts and wsig):
         raise HTTPException(status_code=401, detail="Missing standard-webhooks headers")
 
-    # normalize timestamp tolerance
     try:
         ts = int(wts)
         if ts > 10**12:
@@ -788,7 +781,7 @@ async def create_composio_trigger(req: CreateComposioTriggerRequest, current_use
             provider_id="composio",
             name=req.name or f"{req.slug}",
             config=suna_config,
-            description=f"{req.slug}"
+            description=f"Composio event: {req.slug}"
         )
 
         # Immediately sync triggers to the current version config
