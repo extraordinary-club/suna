@@ -142,7 +142,8 @@ allow_origin_regex = None
 # Add Railway deployment URLs
 allowed_origins.extend([
     "https://suno-frontend-production.up.railway.app",
-    "https://suna-backend-api-production.up.railway.app"
+    "https://suna-backend-api-production.up.railway.app",
+    "https://https://agents.extraordinary.com"
 ])
 
 # Add staging-specific origins
