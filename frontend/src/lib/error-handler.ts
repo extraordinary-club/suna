@@ -136,10 +136,11 @@ export const handleApiError = (error: any, context?: ErrorContext): void => {
   const formattedMessage = formatErrorMessage(rawMessage, context);
 
   if (error?.status >= 500) {
-    toast.error(formattedMessage, {
-      description: 'Our team has been notified and is working on a fix.',
-      duration: 6000,
-    });
+    // Skip these for now
+    // toast.error(formattedMessage, {
+    //   description: 'Our team has been notified and is working on a fix.',
+    //   duration: 6000,
+    // });
   } else if (error?.status === 403) {
     toast.error(formattedMessage, {
       description: 'Contact support if you believe this is an error.',
